@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
+use HotelHub\Core\Application;
 use HotelHub\Core\ErrorHandler;
 use HotelHub\Core\Response;
-use HotelHub\Core\Router;
 use HotelHub\Core\View;
 
 require dirname(__DIR__) . '/vendor/autoload.php';
@@ -20,10 +20,8 @@ session_set_cookie_params([
 ]);
 session_start();
 
-$router = new Router();
-$router->get('/', static function (): void {
-    Response::html(View::render('home', ['title' => 'HotelHub']));
-});
+$application = new Application($config['database']);
+$router = $application->router();
 
 $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';

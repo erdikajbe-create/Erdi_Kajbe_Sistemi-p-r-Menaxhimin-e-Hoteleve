@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace HotelHub\Core;
 
 use ErrorException;
+use HotelHub\Exceptions\AppException;
 use Throwable;
 
 final class ErrorHandler
@@ -27,15 +28,26 @@ final class ErrorHandler
         set_exception_handler(static function (Throwable $exception) use ($debug): never {
             error_log((string) $exception);
 
+            if ($exception instanceof AppException) {
+                Response::html(
+                    View::render('errors/error', [
+                        'title' => $exception->getMessage(),
+                        'message' => $exception->getMessage(),
+                    ]),
+                    $exception->getStatusCode(),
+                );
+            }
+
             $details = $debug
                 ? '<pre>' . e((string) $exception) . '</pre>'
                 : '';
 
             Response::html(
-                '<!doctype html><html lang="sq"><meta charset="utf-8">'
-                . '<title>Gabim i brendshëm</title><h1>Ndodhi një gabim i brendshëm.</h1>'
-                . $details
-                . '</html>',
+                View::render('errors/error', [
+                    'title' => 'Gabim i brendshëm',
+                    'message' => 'Ndodhi një gabim i brendshëm.',
+                    'details' => $details,
+                ]),
                 500,
             );
         });
