@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace HotelHub\Controllers;
 
-use DateTimeImmutable;
 use HotelHub\Core\Response;
 use HotelHub\Core\View;
 use HotelHub\Exceptions\ValidationException;
@@ -20,7 +19,7 @@ final readonly class AvailabilityController
     {
         Response::html(View::render('availability/index', [
             'title' => 'Kërko dhoma të lira',
-            'today' => (new DateTimeImmutable('today'))->format('Y-m-d'),
+            'today' => date('Y-m-d'),
         ]));
     }
 

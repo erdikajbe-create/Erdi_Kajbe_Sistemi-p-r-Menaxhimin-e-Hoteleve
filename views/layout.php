@@ -1,4 +1,9 @@
-<!doctype html>
+<?php
+/**
+ * @var string $title
+ * @var string $content
+ */
+?><!doctype html>
 <html lang="sq">
 <head>
     <meta charset="utf-8">

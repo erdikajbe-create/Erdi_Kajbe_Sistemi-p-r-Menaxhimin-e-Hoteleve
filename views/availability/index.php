@@ -1,4 +1,9 @@
-<section class="page-heading">
+<?php
+/**
+ * @var string $title
+ * @var string $today
+ */
+?><section class="page-heading">
     <p class="eyebrow">Disponueshmëria</p>
     <h1>Kërko dhoma të lira</h1>
     <p>Zgjidh datat e qëndrimit dhe numrin e mysafirëve.</p>

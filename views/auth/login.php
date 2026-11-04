@@ -1,4 +1,10 @@
-<section class="form-card">
+<?php
+/**
+ * @var string $title
+ * @var string|null $error
+ * @var array<string, string|list<string>> $old
+ */
+?><section class="form-card">
     <p class="eyebrow">Llogaria juaj</p>
     <h1>Hyr në HotelHub</h1>
     <?php if ($error !== null): ?>

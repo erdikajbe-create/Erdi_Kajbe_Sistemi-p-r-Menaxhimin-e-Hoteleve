@@ -1,4 +1,8 @@
-<section class="hero">
+<?php
+/**
+ * @var array{id: int, name: string, email: string, role: string}|null $user
+ */
+?><section class="hero">
     <p class="eyebrow">Menaxhim i thjeshtë i hotelit</p>
     <h1>Mirë se vjen në HotelHub</h1>
     <p>Një vend i vetëm për rezervimet dhe përvojën e mysafirëve tuaj.</p>

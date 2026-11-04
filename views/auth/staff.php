@@ -1,4 +1,11 @@
-<section class="page-heading">
+<?php
+/**
+ * @var string $title
+ * @var array<int, array<string, mixed>> $staff
+ * @var array<string, string> $errors
+ * @var array<string, string|list<string>> $old
+ */
+?><section class="page-heading">
     <p class="eyebrow">Administrimi</p>
     <h1>Menaxhimi i stafit</h1>
 </section>

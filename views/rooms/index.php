@@ -1,4 +1,13 @@
-<section class="page-heading">
+<?php
+/**
+ * @var string $title
+ * @var array<int, array<string, mixed>> $rooms
+ * @var array<int, array<string, mixed>> $types
+ * @var array<string, string> $errors
+ * @var array<string, string|list<string>> $old
+ * @var bool $isAdmin
+ */
+?><section class="page-heading">
     <p class="eyebrow">Menaxhimi</p>
     <h1>Dhomat</h1>
 </section>

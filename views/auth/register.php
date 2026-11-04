@@ -1,4 +1,10 @@
-<section class="form-card">
+<?php
+/**
+ * @var string $title
+ * @var array<string, string> $errors
+ * @var array<string, string|list<string>> $old
+ */
+?><section class="form-card">
     <p class="eyebrow">Llogari e re</p>
     <h1>Regjistrohu si mysafir</h1>
     <form method="post" action="/register">

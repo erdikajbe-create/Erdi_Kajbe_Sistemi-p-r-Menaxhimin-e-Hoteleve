@@ -1,4 +1,10 @@
-<section class="panel">
+<?php
+/**
+ * @var string $title
+ * @var string $message
+ * @var string|null $details
+ */
+?><section class="panel">
     <p class="eyebrow">Gabim</p>
     <h1><?= e($title) ?></h1>
     <p><?= e($message) ?></p>

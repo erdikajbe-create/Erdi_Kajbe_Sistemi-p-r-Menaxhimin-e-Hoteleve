@@ -1,4 +1,13 @@
-<section class="page-heading">
+<?php
+/**
+ * @var string $title
+ * @var array<int, array<string, mixed>> $types
+ * @var array<int, array<string, mixed>> $amenities
+ * @var array<string, string> $errors
+ * @var array<string, string|list<string>> $old
+ * @var int|null $formType
+ */
+?><section class="page-heading">
     <p class="eyebrow">Administrimi</p>
     <h1>Llojet e dhomave dhe pajisjet</h1>
 </section>
