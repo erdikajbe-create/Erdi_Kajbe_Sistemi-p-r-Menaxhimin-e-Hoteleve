@@ -11,5 +11,6 @@
 
 <section class="panel">
     <h2>HotelHub</h2>
-    <p>Rezervimet dhe menaxhimi i dhomave do të jenë të disponueshme nga llogaria juaj.</p>
+    <p>Kërko disponueshmërinë e dhomave për datat e qëndrimit.</p>
+    <p><a class="button" href="/availability">Kërko dhoma të lira</a></p>
 </section>

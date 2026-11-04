@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace HotelHub\Core;
 
 use HotelHub\Exceptions\ValidationException;
+use DateTimeImmutable;
 
 final class Validator
 {
@@ -49,6 +50,15 @@ final class Validator
                         ? 'Shkruani një numër të plotë të vlefshëm.' : null,
                     'positive' => filter_var($value, FILTER_VALIDATE_INT) === false
                         || (int) $value < 1 ? 'Vlera duhet të jetë më e madhe se zero.' : null,
+                    'date' => self::parseDate($value) === null
+                        ? 'Shkruani një datë të vlefshme.' : null,
+                    'after' => self::dateIsAfter($value, Input::string($input, (string) $argument))
+                        ? null : 'Data duhet të jetë pas datës së mëparshme.',
+                    'after_or_equal' => self::dateIsAfterOrEqual(
+                        $value,
+                        $argument === 'today' ? (new DateTimeImmutable('today'))->format('Y-m-d')
+                            : Input::string($input, (string) $argument),
+                    ) ? null : 'Data nuk mund të jetë në të kaluarën.',
                     'max_value' => filter_var($value, FILTER_VALIDATE_INT) === false
                         || (int) $value > (int) $argument
                             ? sprintf('Vlera nuk mund të jetë më e madhe se %s.', $argument) : null,
@@ -70,5 +80,33 @@ final class Validator
         }
 
         return $validated;
+    }
+
+    private static function dateIsAfter(string $value, string $otherValue): bool
+    {
+        $date = self::parseDate($value);
+        $otherDate = self::parseDate($otherValue);
+
+        return $date !== null && $otherDate !== null && $date > $otherDate;
+    }
+
+    private static function dateIsAfterOrEqual(string $value, string $otherValue): bool
+    {
+        $date = self::parseDate($value);
+        $otherDate = self::parseDate($otherValue);
+
+        return $date !== null && $otherDate !== null && $date >= $otherDate;
+    }
+
+    private static function parseDate(string $value): ?DateTimeImmutable
+    {
+        $date = DateTimeImmutable::createFromFormat('!Y-m-d', $value);
+        $errors = DateTimeImmutable::getLastErrors();
+
+        if ($date === false || ($errors !== false && ($errors['warning_count'] > 0 || $errors['error_count'] > 0))) {
+            return null;
+        }
+
+        return $date->format('Y-m-d') === $value ? $date : null;
     }
 }

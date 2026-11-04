@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace HotelHub\Core;
 
 use HotelHub\Controllers\AuthController;
+use HotelHub\Controllers\AvailabilityController;
 use HotelHub\Controllers\RoomController;
 use HotelHub\Controllers\RoomTypeController;
+use HotelHub\Repositories\AvailabilityRepository;
 use HotelHub\Repositories\GuestRepository;
 use HotelHub\Repositories\RoomRepository;
 use HotelHub\Repositories\RoomTypeRepository;
 use HotelHub\Repositories\UserRepository;
 use HotelHub\Services\AuthService;
+use HotelHub\Services\AvailabilityService;
 use HotelHub\Services\RoomManagementService;
 use PDO;
 
@@ -20,9 +23,11 @@ final class Application
     private ?PDO $pdo = null;
     private ?UserRepository $users = null;
     private ?GuestRepository $guests = null;
+    private ?AvailabilityRepository $availabilityRepository = null;
     private ?RoomRepository $rooms = null;
     private ?RoomTypeRepository $roomTypes = null;
     private ?AuthService $auth = null;
+    private ?AvailabilityService $availability = null;
     private ?RoomManagementService $roomManagement = null;
 
     /**
@@ -40,6 +45,12 @@ final class Application
                 'title' => 'HotelHub',
                 'user' => Auth::user(),
             ]));
+        });
+        $router->get('/availability', function (): void {
+            $this->availabilityController()->index();
+        });
+        $router->get('/api/availability', function (): void {
+            $this->availabilityController()->search();
         });
 
         $router->get('/register', function (): void {
@@ -110,6 +121,11 @@ final class Application
         return new AuthController($this->authService(), $this->userRepository());
     }
 
+    private function availabilityController(): AvailabilityController
+    {
+        return new AvailabilityController($this->availabilityService());
+    }
+
     private function roomController(): RoomController
     {
         return new RoomController($this->roomManagementService(), $this->roomRepository());
@@ -123,6 +139,11 @@ final class Application
     private function authService(): AuthService
     {
         return $this->auth ??= new AuthService($this->pdo(), $this->userRepository(), $this->guestRepository());
+    }
+
+    private function availabilityService(): AvailabilityService
+    {
+        return $this->availability ??= new AvailabilityService($this->availabilityRepository());
     }
 
     private function roomManagementService(): RoomManagementService
@@ -142,6 +163,11 @@ final class Application
     private function guestRepository(): GuestRepository
     {
         return $this->guests ??= new GuestRepository($this->pdo());
+    }
+
+    private function availabilityRepository(): AvailabilityRepository
+    {
+        return $this->availabilityRepository ??= new AvailabilityRepository($this->pdo());
     }
 
     private function roomRepository(): RoomRepository

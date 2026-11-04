@@ -73,6 +73,9 @@ Ndrysho kredencialet demo para përdorimit jashtë ambientit lokal.
   5 tentativa/IP/minutë dhe krijimi i recepsionistëve nga admini.
 - **Faza 2:** llojet e dhomave, lidhja e pajisjeve, dhomat, ndryshimi i statusit
   dhe mbrojtja nga fshirja e dhomave me rezervime.
+- **Faza 3:** kërkimi publik i disponueshmërisë me validim serveri, filtrim sipas
+  kapacitetit, mirëmbajtjes dhe mbivendosjes së rezervimeve, si dhe paraqitje
+  interaktive me gjendjet loading, bosh dhe gabim.
 
 Pajisjet përdorin tabelat `amenities`/`amenity_room_type`; fshirja e një lloji që
 ka dhoma bllokohet nga FK ekzistuese. Skema e ofruar mbetet burimi i së vërtetës

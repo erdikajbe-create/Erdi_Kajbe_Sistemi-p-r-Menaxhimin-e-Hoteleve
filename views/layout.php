@@ -10,6 +10,7 @@
     <header class="site-header">
         <a class="brand" href="/">HotelHub</a>
         <nav class="site-nav" aria-label="Navigimi kryesor">
+            <a href="/availability">Disponueshmëria</a>
             <?php $currentUser = \HotelHub\Core\Auth::user(); ?>
             <?php if ($currentUser !== null): ?>
                 <?php if (in_array($currentUser['role'], ['admin', 'receptionist'], true)): ?>
