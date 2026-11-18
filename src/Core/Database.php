@@ -23,11 +23,16 @@ final class Database
         );
 
         try {
-            return new PDO($dsn, $config['username'], $config['password'], [
+            $pdo = new PDO($dsn, $config['username'], $config['password'], [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                 PDO::ATTR_EMULATE_PREPARES => false,
             ]);
+            // CURDATE()/NOW() në MySQL duhet të përputhen me date() në PHP,
+            // përndryshe "sot" ndryshon mes check-in-it, dashboard-it dhe raporteve.
+            $pdo->exec(sprintf("SET time_zone = '%s'", date('P')));
+
+            return $pdo;
         } catch (PDOException $exception) {
             throw new RuntimeException('Lidhja me databazën dështoi.', 0, $exception);
         }

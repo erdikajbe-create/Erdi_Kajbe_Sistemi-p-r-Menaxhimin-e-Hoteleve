@@ -72,7 +72,7 @@ final readonly class AuthController
             $this->auth->authenticate(
                 Input::string($_POST, 'email'),
                 Input::string($_POST, 'password'),
-                $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+                \HotelHub\Core\Request::ip(),
             );
         } catch (AppException $exception) {
             Response::html(View::render('auth/login', [
@@ -82,8 +82,7 @@ final readonly class AuthController
             ]), $exception->getStatusCode());
         }
 
-        $role = Auth::user()['role'];
-        Response::redirect($role === 'guest' ? '/' : '/rooms');
+        Response::redirect(Auth::pullIntended() ?? Auth::homeFor(Auth::user()['role']));
     }
 
     public function logout(): void

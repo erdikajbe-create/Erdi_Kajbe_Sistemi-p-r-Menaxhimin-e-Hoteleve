@@ -136,14 +136,26 @@ final readonly class RoomManagementService
         }
     }
 
+    /**
+     * Ndryshimi manual i statusit (KF08). "occupied" vendoset dhe hiqet vetëm nga
+     * check-in/check-out (RB08), që statusi i dhomës të mos dalë nga sinkronizimi
+     * me rezervimet.
+     */
     public function changeRoomStatus(int $id, string $status): void
     {
-        $this->requireRoom($id);
-        if (RoomStatus::tryFrom($status) === null) {
+        $room = $this->requireRoom($id);
+        $target = RoomStatus::tryFrom($status);
+        if ($target === null) {
             throw new ValidationException(['status' => 'Zgjidhni një status të vlefshëm.']);
         }
+        if ($target === RoomStatus::Occupied) {
+            throw new ValidationException(['status' => 'Statusi "E zënë" vendoset automatikisht gjatë check-in.']);
+        }
+        if ($room['status'] === RoomStatus::Occupied->value || $this->rooms->hasActiveStay($id)) {
+            throw new ValidationException(['status' => 'Dhoma ka mysafir brenda; statusi ndryshon me check-out.']);
+        }
 
-        $this->rooms->updateStatus($id, $status);
+        $this->rooms->updateStatus($id, $target->value);
     }
 
     public function createAmenity(array $input): void
@@ -161,6 +173,7 @@ final readonly class RoomManagementService
 
     public function deleteAmenity(int $id): void
     {
+        $this->requireAmenity($id);
         try {
             $this->types->deleteAmenity($id);
         } catch (PDOException $exception) {
@@ -175,6 +188,7 @@ final readonly class RoomManagementService
             throw new ValidationException(['name' => 'Shkruani emrin e pajisjes (deri në 80 karaktere).']);
         }
 
+        $this->requireAmenity($id);
         try {
             $this->types->updateAmenity($id, $name);
         } catch (PDOException $exception) {
@@ -190,6 +204,13 @@ final readonly class RoomManagementService
         }
 
         return $type;
+    }
+
+    private function requireAmenity(int $id): void
+    {
+        if (!in_array($id, array_map('intval', array_column($this->types->amenities(), 'id')), true)) {
+            throw new AppException('Pajisja nuk u gjet.', 404);
+        }
     }
 
     private function requireRoom(int $id): array

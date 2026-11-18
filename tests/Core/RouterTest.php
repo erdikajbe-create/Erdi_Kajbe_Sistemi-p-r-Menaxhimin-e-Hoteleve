@@ -30,4 +30,18 @@ final class RouterTest extends TestCase
 
         self::assertFalse($router->dispatch('GET', '/login'));
     }
+
+    public function testIdParameterAcceptsOnlyDigits(): void
+    {
+        $router = new Router();
+        $router->get('/reservations/create', static function (): void {
+        });
+        $router->get('/reservations/{id}', static function (string $id): void {
+        });
+
+        self::assertTrue($router->dispatch('GET', '/reservations/15'));
+        self::assertTrue($router->dispatch('GET', '/reservations/create'));
+        self::assertFalse($router->dispatch('GET', '/reservations/abc'));
+        self::assertFalse($router->dispatch('GET', '/reservations/1%20OR%201=1'));
+    }
 }

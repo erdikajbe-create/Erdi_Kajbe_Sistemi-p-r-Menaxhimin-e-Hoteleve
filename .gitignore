@@ -3,3 +3,7 @@
 !.env.example
 /vendor/
 .phpunit.cache/
+
+vendor/
+.env
+.phpunit.result.cache

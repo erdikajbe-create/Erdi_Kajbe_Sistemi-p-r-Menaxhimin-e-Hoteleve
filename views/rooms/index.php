@@ -49,16 +49,20 @@
                 }) ?></span>
             </div>
             <p><?= e($room['room_type_name']) ?> · Kati <?= e($room['floor']) ?> · <?= e($room['capacity']) ?> persona</p>
-            <form method="post" action="/rooms/<?= e($room['id']) ?>/status" class="inline-form">
-                <input type="hidden" name="_csrf" value="<?= e(\HotelHub\Core\Csrf::token()) ?>">
-                <label for="status-<?= e($room['id']) ?>">Statusi</label>
-                <select id="status-<?= e($room['id']) ?>" name="status">
-                    <?php foreach (['available' => 'E lirë', 'occupied' => 'E zënë', 'cleaning' => 'Pastrim', 'maintenance' => 'Mirëmbajtje'] as $value => $label): ?>
-                        <option value="<?= e($value) ?>" <?= $room['status'] === $value ? 'selected' : '' ?>><?= e($label) ?></option>
-                    <?php endforeach; ?>
-                </select>
-                <button class="button" type="submit">Ndrysho</button>
-            </form>
+            <?php if ($room['status'] === 'occupied'): ?>
+                <p class="muted">Statusi ndryshon automatikisht me check-out.</p>
+            <?php else: ?>
+                <form method="post" action="/rooms/<?= e($room['id']) ?>/status" class="inline-form">
+                    <input type="hidden" name="_csrf" value="<?= e(\HotelHub\Core\Csrf::token()) ?>">
+                    <label for="status-<?= e($room['id']) ?>">Statusi</label>
+                    <select id="status-<?= e($room['id']) ?>" name="status">
+                        <?php foreach (['available' => 'E lirë', 'cleaning' => 'Pastrim', 'maintenance' => 'Mirëmbajtje'] as $value => $label): ?>
+                            <option value="<?= e($value) ?>" <?= $room['status'] === $value ? 'selected' : '' ?>><?= e($label) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <button class="button" type="submit">Ndrysho</button>
+                </form>
+            <?php endif; ?>
             <?php if ($isAdmin): ?>
                 <details class="edit-details">
                     <summary>Ndrysho të dhënat</summary>

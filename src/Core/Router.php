@@ -50,7 +50,8 @@ final class Router
         $quoted = preg_quote($path, '~');
         $pattern = preg_replace_callback(
             '/\\\\\{([a-zA-Z_][a-zA-Z0-9_]*)\\\\\}/',
-            static fn (array $matches): string => '([^/]+)',
+            // {id} pranon vetëm shifra, që /reservations/abc të japë 404 dhe jo ID 0
+            static fn (array $matches): string => $matches[1] === 'id' ? '(\\d+)' : '([^/]+)',
             $quoted,
         );
 

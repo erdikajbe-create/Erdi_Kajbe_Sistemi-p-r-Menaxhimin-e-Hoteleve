@@ -16,4 +16,5 @@ SOURCE migrations/010_create_payments.sql;
 SOURCE migrations/011_create_login_attempts.sql;
 SOURCE migrations/012_create_triggers.sql;
 SOURCE migrations/013_create_views.sql;
+SOURCE migrations/014_reservation_service_line_items.sql;
 SOURCE seed.sql;

@@ -36,6 +36,9 @@ try {
         ],
     );
 
+    date_default_timezone_set($_ENV['APP_TIMEZONE'] ?? 'Europe/Belgrade');
+    $pdo->exec(sprintf("SET time_zone = '%s'", date('P')));   // CURDATE() në seed.sql = "sot" e aplikacionit
+
     $version = (string) $pdo->query('SELECT VERSION()')->fetchColumn();
     $versionComment = (string) $pdo->query('SELECT @@version_comment')->fetchColumn();
     if (stripos($version . ' ' . $versionComment, 'mariadb') !== false
@@ -69,22 +72,8 @@ try {
         );
     }
 
-    $migrationFiles = glob(__DIR__ . '/migrations/*.sql');
-    if ($migrationFiles === false) {
-        throw new \RuntimeException('Migrimet e databazës nuk mund të lexohen.');
-    }
-    sort($migrationFiles, SORT_STRING);
-    $migrationFiles[] = __DIR__ . '/seed.sql';
-
-    foreach ($migrationFiles as $file) {
-        $sql = file_get_contents($file);
-        if ($sql === false) {
-            throw new \RuntimeException(sprintf('Skedari "%s" nuk mund të lexohet.', basename($file)));
-        }
-
-        foreach (splitSqlStatements($sql) as $statement) {
-            $pdo->exec($statement);
-        }
+    foreach (\HotelHub\Core\SqlScript::files(__DIR__) as $file) {
+        \HotelHub\Core\SqlScript::runFile($pdo, $file);
         fwrite(STDOUT, sprintf("U ekzekutua: %s\n", basename($file)));
     }
 
@@ -92,38 +81,4 @@ try {
 } catch (\Throwable $exception) {
     fwrite(STDERR, "Gabim gjatë setup-it: " . $exception->getMessage() . "\n");
     exit(1);
-}
-
-/**
- * Splits SQL while respecting the custom DELIMITER used by the trigger migration.
- *
- * @return list<string>
- */
-function splitSqlStatements(string $sql): array
-{
-    $delimiter = ';';
-    $buffer = '';
-    $statements = [];
-
-    foreach (preg_split('/\R/', $sql) ?: [] as $line) {
-        if (preg_match('/^\s*DELIMITER\s+(\S+)\s*$/i', $line, $matches) === 1) {
-            $delimiter = $matches[1];
-            continue;
-        }
-
-        $buffer .= $line . "\n";
-        while (($position = strpos($buffer, $delimiter)) !== false) {
-            $statement = trim(substr($buffer, 0, $position));
-            $buffer = substr($buffer, $position + strlen($delimiter));
-            if ($statement !== '' && preg_match('/^(?:--[^\r\n]*\s*)+$/s', $statement) !== 1) {
-                $statements[] = $statement;
-            }
-        }
-    }
-
-    if (trim($buffer) !== '') {
-        throw new \RuntimeException('Një komandë SQL mbeti e papërfunduar.');
-    }
-
-    return $statements;
 }

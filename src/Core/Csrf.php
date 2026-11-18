@@ -28,6 +28,15 @@ final class Csrf
         }
     }
 
+    /**
+     * Faqet HTML dërgojnë token-in si fushë `_csrf`; klientët e /api (fetch, Postman)
+     * e dërgojnë në header-in `X-CSRF-Token` (KJF04).
+     */
+    public static function verifyRequest(): void
+    {
+        self::verify(Request::isApi() ? Request::header('X-CSRF-Token') : ($_POST['_csrf'] ?? null));
+    }
+
     private static function assertSessionStarted(): void
     {
         if (session_status() !== PHP_SESSION_ACTIVE) {

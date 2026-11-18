@@ -83,7 +83,12 @@ final readonly class RoomController
     {
         Auth::requireRole('admin', 'receptionist');
         Csrf::verify($_POST['_csrf'] ?? null);
-        $this->management->changeRoomStatus((int) $id, Input::string($_POST, 'status'));
+        try {
+            $this->management->changeRoomStatus((int) $id, Input::string($_POST, 'status'));
+        } catch (ValidationException $exception) {
+            Flash::add('error', $exception->errors()['status'] ?? $exception->getMessage());
+            Response::redirect('/rooms');
+        }
         Flash::add('success', 'Statusi i dhomës u ndryshua.');
         Response::redirect('/rooms');
     }
