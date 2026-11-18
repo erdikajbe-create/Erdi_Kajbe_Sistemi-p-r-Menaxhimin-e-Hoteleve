@@ -7,3 +7,7 @@
 vendor/
 .env
 .phpunit.result.cache
+
+vendor/
+.env
+.phpunit.result.cache
