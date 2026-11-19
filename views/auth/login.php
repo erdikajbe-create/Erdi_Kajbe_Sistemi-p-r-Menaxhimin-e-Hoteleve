@@ -1,3 +1,5 @@
+<div class="auth-layout">
+    <aside class="auth-aside"><p class="eyebrow">MIRË SE ERDHE NË HOTELHUB</p><h2>Një qëndrim i bukur fillon me një përvojë të lehtë.</h2><p>Hyr në llogarinë tënde për të menaxhuar rezervimet dhe udhëtimet.</p></aside>
 <section class="form-card">
     <p class="eyebrow">Llogaria juaj</p>
     <h1>Hyr në HotelHub</h1>
@@ -15,3 +17,4 @@
     </form>
     <p>Nuk ke llogari? <a href="/register">Regjistrohu</a>.</p>
 </section>
+</div>

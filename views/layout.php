@@ -10,7 +10,6 @@
     <title><?= e($title) ?> · HotelHub</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
-<body>
     <?php
     $currentUser = \HotelHub\Core\Auth::user();
     $role = $currentUser['role'] ?? null;
@@ -21,8 +20,10 @@
         return '<a href="' . e($href) . '"' . ($active ? ' aria-current="page"' : '') . '>' . e($label) . '</a>';
     };
     ?>
+<body class="<?= in_array($role, ['admin', 'receptionist'], true) ? 'staff-shell' : 'guest-shell' ?>">
     <header class="site-header<?= $currentPath === '/' ? ' site-header--home' : '' ?>">
-        <a class="brand" href="/">HotelHub</a>
+        <a class="brand" href="/" aria-label="HotelHub, faqja kryesore">Hotel<span>Hub</span></a>
+        <?php if (in_array($role, ['admin', 'receptionist'], true)): ?><p class="sidebar-caption">MENAXHIMI I HOTELIT</p><?php endif; ?>
         <nav class="site-nav" aria-label="Navigimi kryesor">
             <?= $navLink('/availability', 'Kërko dhoma') ?>
             <?php if ($role === 'guest'): ?>
@@ -31,6 +32,7 @@
                 <?= $navLink('/reservations', 'Rezervimet') ?>
                 <?= $navLink('/rooms', 'Dhomat') ?>
             <?php endif; ?>
+            <button class="theme-toggle" type="button" data-theme-toggle aria-label="Ndrysho temën" title="Ndrysho temën"><span aria-hidden="true">◐</span><span class="theme-toggle__label">Tema</span></button>
             <?php if ($role === 'admin'): ?>
                 <?= $navLink('/dashboard', 'Dashboard') ?>
                 <details class="nav-menu">
@@ -73,5 +75,6 @@
         <script src="<?= e($script) ?>" defer></script>
     <?php endforeach; ?>
     <?php if ($currentPath === '/'): ?><script src="/js/home.js" defer></script><?php endif; ?>
+    <script src="/js/theme.js" defer></script>
 </body>
 </html>

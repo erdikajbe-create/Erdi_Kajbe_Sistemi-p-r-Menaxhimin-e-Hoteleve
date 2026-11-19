@@ -1,3 +1,5 @@
+<div class="auth-layout">
+    <aside class="auth-aside"><p class="eyebrow">PUSHIMI YT I RADHËS</p><h2>Krijo llogarinë dhe zbulo rehati të menduar për ty.</h2><p>Rezervo qëndrimin tënd në pak hapa dhe mbaji detajet pranë.</p></aside>
 <section class="form-card">
     <p class="eyebrow">Llogari e re</p>
     <h1>Regjistrohu si mysafir</h1>
@@ -24,3 +26,4 @@
     </form>
     <p>Ke llogari? <a href="/login">Hyr këtu</a>.</p>
 </section>
+</div>
