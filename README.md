@@ -5,14 +5,13 @@ Ndërtohet me PHP 8.3, PDO, MySQL 8 dhe pamje PHP/CSS pa build tools.
 
 ## Kërkesat
 
-- PHP 8.3 me PDO MySQL, `mbstring` dhe `fileinfo`
+- PHP 8.3 me PDO MySQL, `mbstring`, `bcmath` dhe `fileinfo`
 - Composer
-- MySQL 8.0.16 ose më i ri (InnoDB)
+- MySQL 8.0.16+ ose MariaDB 10.11+ (InnoDB; `CHECK` constraints aktive)
 - Apache me `mod_rewrite`, ose serveri i integruar PHP
 
-> XAMPP mund të përfshijë MariaDB në vend të MySQL. Ekzekuto `database/setup.php` për
-> kontrollin e versionit; MariaDB dhe MySQL më të vjetër se 8.0.16 refuzohen, sepse
-> mund të mos zbatojnë `CHECK` constraints.
+> Setup-i kontrollon versionin e serverit. MariaDB 10.11+ dhe MySQL 8.0.16+ pranohen;
+> versionet më të vjetra refuzohen sepse mund të mos zbatojnë `CHECK` constraints.
 
 ## Instalimi lokal (Windows / XAMPP / Laragon)
 
@@ -44,7 +43,7 @@ Ndërtohet me PHP 8.3, PDO, MySQL 8 dhe pamje PHP/CSS pa build tools.
    dhe aktivizo `mod_rewrite`.
 
 Për konfigurimin e përdoruesit të databazës me privilegje minimale, përshtat
-`database/create_app_user.sql` për MySQL-in tënd dhe përdor atë llogari në `.env`.
+`database/create_app_user.sql` për serverin tënd dhe përdor atë llogari në `.env`.
 Mos përdor `root` në instalim të publikuar.
 
 ### Paralajmërim për `install.sql`
@@ -66,26 +65,33 @@ Pas setup-it mund të hysh me fjalëkalimin `password`:
 
 Ndrysho kredencialet demo para përdorimit jashtë ambientit lokal.
 
-## Fazat e përfunduara
+## Funksionalitetet
 
-- **Faza 0:** bazat MVC, konfigurimi, PDO, Router, sesioni, layout dhe stilet.
-- **Faza 1:** regjistrim mysafiri, hyrje/dalje, CSRF, hash fjalëkalimi, rate limit
-  5 tentativa/IP/minutë dhe krijimi i recepsionistëve nga admini.
-- **Faza 2:** llojet e dhomave, lidhja e pajisjeve, dhomat, ndryshimi i statusit
-  dhe mbrojtja nga fshirja e dhomave me rezervime.
-- **Faza 3:** kërkimi publik i disponueshmërisë me validim serveri, filtrim sipas
-  kapacitetit, mirëmbajtjes dhe mbivendosjes së rezervimeve, si dhe paraqitje
-  interaktive me gjendjet loading, bosh dhe gabim.
+- Autentikimi me role admin, recepsionist dhe mysafir; regjistrimi publik krijon
+  vetëm mysafirë. Sesionet rigjenerohen pas kyçjes, formularët mbrohen me CSRF
+  dhe hyrja kufizohet në 5 tentativa/IP/minutë.
+- CRUD për llojet e dhomave, pajisjet dhe dhomat, me kontrolle që parandalojnë
+  fshirjen e të dhënave të lidhura me rezervime.
+- Kërkim publik i dhomave të lira sipas datave dhe kapacitetit.
+- Rezervime me kode unike, parandalim të mbivendosjes në transaksion, role dhe
+  kontroll pronësie; recepsioni mund të regjistrojë mysafirë pa llogari.
+- Konfirmim, anulim, check-in dhe check-out me kalime të vlefshme statusi.
+- Katalog shërbimesh, çmime të ruajtura në momentin e shtimit, pagesa të
+  pjesshme/të plota dhe faturë me total e bilanc.
+- Dashboard administrativ me gjendjen e dhomave, mbërritjet/largimet dhe
+  të ardhurat mujore.
+- API JSON nën `/api` për autentikim, disponueshmëri, dhoma, rezervime, fatura
+  dhe statistika. Për kërkesat me shkrim API kërkon sesion dhe token CSRF në
+  `X-CSRF-Token`; shembujt gjenden te
+  [koleksioni Postman](docs/HotelHub.postman_collection.json).
 
-Pajisjet përdorin tabelat `amenities`/`amenity_room_type`; fshirja e një lloji që
-ka dhoma bllokohet nga FK ekzistuese. Skema e ofruar mbetet burimi i së vërtetës
-dhe nuk është ndryshuar. Në veçanti, `guests.phone` në migrimin ekzistues është
-nullable; regjistrimi publik nuk kërkon telefon.
+## Arkitektura
 
-**Supozime:** për regjistrimin publik kërkohen emri dhe mbiemri në të njëjtën
-fushë; paneli i dhomave u jepet adminit dhe recepsionistit, ndërsa krijimi dhe
-fshirja u lejohen vetëm administratorëve. Pagesat, shërbimet dhe rezervimet
-mbeten për fazat pasuese.
+`public/index.php` është front controller; `src/Controllers` trajton kërkesat,
+`src/Services` zbaton rregullat e biznesit, `src/Repositories` përmban SQL me PDO
+prepared statements, ndërsa `views/` përmban shabllonet HTML. Skema krijohet
+nga migrimet e renditura në `database/migrations/` dhe të dhënat demo nga
+`database/seed.sql`.
 
 ## Testet
 

@@ -33,6 +33,7 @@ final readonly class RoomTypeController
             'errors' => [],
             'old' => [],
             'formType' => null,
+            'scripts' => ['/js/collection-search.js', '/js/forms.js'],
         ]));
     }
 
@@ -127,6 +128,7 @@ final readonly class RoomTypeController
             'errors' => $errors,
             'old' => Input::safeValues($input),
             'formType' => Input::string($input, 'id') !== '' ? (int) Input::string($input, 'id') : null,
+            'scripts' => ['/js/collection-search.js', '/js/forms.js'],
         ]), $status);
     }
 }

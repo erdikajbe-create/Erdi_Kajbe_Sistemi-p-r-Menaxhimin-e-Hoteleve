@@ -30,6 +30,21 @@ final readonly class RoomRepository
         return $room === false ? null : $room;
     }
 
+    /** Bllokon dhomën gjatë verifikimit dhe krijimit të rezervimit. */
+    public function lockWithType(int $id): ?array
+    {
+        $statement = $this->pdo->prepare(
+            'SELECT r.id, r.number, r.floor, r.status, r.room_type_id, '
+            . 'rt.name AS room_type_name, rt.capacity, rt.base_price '
+            . 'FROM rooms r JOIN room_types rt ON rt.id = r.room_type_id '
+            . 'WHERE r.id = :id FOR UPDATE',
+        );
+        $statement->execute(['id' => $id]);
+        $room = $statement->fetch();
+
+        return $room === false ? null : $room;
+    }
+
     public function create(int $typeId, string $number, int $floor): void
     {
         $statement = $this->pdo->prepare(

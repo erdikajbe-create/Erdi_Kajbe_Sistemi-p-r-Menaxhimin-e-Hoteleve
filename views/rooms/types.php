@@ -53,11 +53,17 @@
 </section>
 
 <section class="panel">
-    <h2>Llojet ekzistuese</h2>
+    <div class="section-heading"><div><p class="eyebrow">Inventari</p><h2>Llojet ekzistuese</h2></div><span class="inventory-count"><?= count($types) ?> gjithsej</span></div>
     <?php if ($types === []): ?><p>Nuk ka ende lloje dhomash.</p><?php endif; ?>
-    <div class="management-list">
+    <?php if ($types !== []): ?>
+    <div class="collection-toolbar collection-toolbar--embedded" data-live-search data-items=".room-type-item" data-count-singular="lloj dhome" data-count-plural="lloje dhomash">
+        <div class="search-field"><span aria-hidden="true">⌕</span><label class="sr-only" for="room-type-search">Kërko lloje dhomash</label><input id="room-type-search" type="search" data-search-input placeholder="Kërko emrin, përshkrimin ose pajisjet…" autocomplete="off"></div>
+        <span class="search-count" data-search-count aria-live="polite"><?= count($types) ?> lloje dhomash</span>
+    </div>
+    <?php endif; ?>
+    <div class="management-list" data-search-results>
         <?php foreach ($types as $type): ?>
-            <article class="management-item">
+            <article class="management-item room-type-item" data-search-item data-search-text="<?= e($type['name'] . ' ' . $type['description'] . ' ' . $type['capacity'] . ' ' . $type['base_price'] . ' ' . implode(' ', array_column($type['amenities'], 'name'))) ?>">
                 <form method="post" action="/admin/room-types/<?= e($type['id']) ?>" class="form-grid">
                     <input type="hidden" name="_csrf" value="<?= e(\HotelHub\Core\Csrf::token()) ?>">
                     <input type="hidden" name="id" value="<?= e($type['id']) ?>">
@@ -111,11 +117,12 @@
                 </form>
                 <form method="post" action="/admin/room-types/<?= e($type['id']) ?>/delete" class="inline-form">
                     <input type="hidden" name="_csrf" value="<?= e(\HotelHub\Core\Csrf::token()) ?>">
-                    <button class="button button--danger" type="submit">Fshi llojin</button>
+                    <button class="button button--danger" type="submit" data-confirm="Ta fshijmë llojin <?= e($type['name']) ?>? Fshirja refuzohet nëse ky lloj ka dhoma të lidhura.">Fshi llojin</button>
                 </form>
                 <p class="muted">Pajisje: <?= e(implode(', ', array_column($type['amenities'], 'name')) ?: 'Pa pajisje') ?></p>
             </article>
         <?php endforeach; ?>
+        <?php if ($types !== []): ?><p class="empty-state" data-search-empty hidden>Nuk u gjet asnjë lloj dhome.</p><?php endif; ?>
     </div>
 </section>
 

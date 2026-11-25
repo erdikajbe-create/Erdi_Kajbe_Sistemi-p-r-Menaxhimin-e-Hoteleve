@@ -38,12 +38,13 @@ try {
 
     $version = (string) $pdo->query('SELECT VERSION()')->fetchColumn();
     $versionComment = (string) $pdo->query('SELECT @@version_comment')->fetchColumn();
-    if (stripos($version . ' ' . $versionComment, 'mariadb') !== false
-        || preg_match('/^(\d+\.\d+\.\d+)/', $version, $matches) !== 1
-        || version_compare($matches[1], '8.0.16', '<')) {
+    $isMariaDb = stripos($version . ' ' . $versionComment, 'mariadb') !== false;
+    $minimumVersion = $isMariaDb ? '10.11.0' : '8.0.16';
+    if (preg_match('/^(\d+\.\d+\.\d+)/', $version, $matches) !== 1
+        || version_compare($matches[1], $minimumVersion, '<')) {
         throw new \RuntimeException(
             sprintf(
-                'U gjet %s. Kërkohet MySQL 8.0.16+; XAMPP mund të vijë me MariaDB dhe të mos mbështesë CHECK.',
+                'U gjet %s. Kërkohet MySQL 8.0.16+ ose MariaDB 10.11+ për zbatimin e CHECK constraints.',
                 $version,
             ),
         );
@@ -88,7 +89,7 @@ try {
         fwrite(STDOUT, sprintf("U ekzekutua: %s\n", basename($file)));
     }
 
-    fwrite(STDOUT, sprintf("Databaza \"%s\" u krijua me sukses në MySQL %s.\n", $database, $version));
+    fwrite(STDOUT, sprintf("Databaza \"%s\" u krijua me sukses në %s %s.\n", $database, $isMariaDb ? 'MariaDB' : 'MySQL', $version));
 } catch (\Throwable $exception) {
     fwrite(STDERR, "Gabim gjatë setup-it: " . $exception->getMessage() . "\n");
     exit(1);

@@ -50,11 +50,21 @@ final class Auth
         return is_array($user) ? $user : null;
     }
 
+    public static function isStaff(): bool
+    {
+        $user = self::user();
+
+        return $user !== null && in_array($user['role'], ['admin', 'receptionist'], true);
+    }
+
     public static function requireLogin(): array
     {
         $user = self::user();
 
         if ($user === null) {
+            if (str_starts_with(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/', '/api/')) {
+                throw new AppException('Duhet të kyçeni për të vazhduar.', 401);
+            }
             Response::redirect('/login');
         }
 

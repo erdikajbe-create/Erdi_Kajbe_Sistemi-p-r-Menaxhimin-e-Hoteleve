@@ -9,7 +9,16 @@
  */
 ?><section class="page-heading">
     <p class="eyebrow">Menaxhimi</p>
-    <h1>Dhomat</h1>
+    <div class="page-heading--split"><div><h1>Dhomat</h1><p>Gjendja operative e çdo dhome në hotel.</p></div><span class="inventory-count"><?= count($rooms) ?> dhoma gjithsej</span></div>
+</section>
+
+<section class="panel collection-toolbar" data-live-search data-items=".room-card">
+    <div class="search-field"><span aria-hidden="true">⌕</span><label class="sr-only" for="room-search">Kërko dhoma</label><input id="room-search" type="search" data-search-input placeholder="Kërko sipas numrit, llojit ose katit…" autocomplete="off"></div>
+    <label class="sr-only" for="room-status-filter">Filtro sipas statusit</label>
+    <select id="room-status-filter" data-search-filter aria-label="Filtro dhomat sipas statusit">
+        <option value="">Të gjitha gjendjet</option><option value="available">Të lira</option><option value="occupied">Të zëna</option><option value="cleaning">Në pastrim</option><option value="maintenance">Në mirëmbajtje</option>
+    </select>
+    <span class="search-count" data-search-count aria-live="polite"><?= count($rooms) ?> dhoma</span>
 </section>
 
 <?php if ($isAdmin): ?>
@@ -44,9 +53,9 @@
     </section>
 <?php endif; ?>
 
-<section class="room-grid">
+<section class="room-grid" data-search-results>
     <?php foreach ($rooms as $room): ?>
-        <article class="room-card">
+        <article class="room-card" data-search-item data-status="<?= e($room['status']) ?>" data-search-text="<?= e($room['number'] . ' ' . $room['room_type_name'] . ' ' . $room['floor'] . ' ' . $room['capacity']) ?>">
             <div class="room-card__heading">
                 <div><p class="eyebrow">Dhoma</p><h2><?= e($room['number']) ?></h2></div>
                 <span class="status-badge status-badge--<?= e($room['status']) ?>"><?= e(match ($room['status']) {
@@ -95,11 +104,12 @@
                     </form>
                     <form method="post" action="/rooms/<?= e($room['id']) ?>/delete" class="inline-form">
                         <input type="hidden" name="_csrf" value="<?= e(\HotelHub\Core\Csrf::token()) ?>">
-                        <button class="button button--danger" type="submit">Fshi dhomën</button>
+                        <button class="button button--danger" type="submit" data-confirm="Ta fshijmë dhomën <?= e($room['number']) ?>? Kjo nuk mund të zhbëhet.">Fshi dhomën</button>
                     </form>
                 </details>
             <?php endif; ?>
         </article>
     <?php endforeach; ?>
-    <?php if ($rooms === []): ?><p class="panel">Nuk ka dhoma të regjistruara.</p><?php endif; ?>
+    <?php if ($rooms === []): ?><p class="empty-state panel">Nuk ka dhoma të regjistruara.</p><?php endif; ?>
+    <?php if ($rooms !== []): ?><p class="empty-state panel" data-search-empty hidden>Nuk u gjet asnjë dhomë me këto filtra.</p><?php endif; ?>
 </section>

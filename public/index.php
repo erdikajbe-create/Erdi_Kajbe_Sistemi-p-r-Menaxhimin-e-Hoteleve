@@ -5,6 +5,7 @@ declare(strict_types=1);
 use HotelHub\Core\Application;
 use HotelHub\Core\ErrorHandler;
 use HotelHub\Core\Response;
+use HotelHub\Core\Request;
 use HotelHub\Core\View;
 
 require dirname(__DIR__) . '/vendor/autoload.php';
@@ -27,5 +28,8 @@ $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
 if (!is_string($path) || !$router->dispatch($method, $path)) {
+    if (Request::isApi()) {
+        Response::json(['success' => false, 'error' => 'NOT_FOUND', 'message' => 'Endpoint-i nuk u gjet.'], 404);
+    }
     Response::html(View::render('errors/404', ['title' => 'Faqja nuk u gjet']), 404);
 }

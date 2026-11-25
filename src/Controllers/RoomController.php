@@ -33,6 +33,7 @@ final readonly class RoomController
             'errors' => [],
             'old' => [],
             'isAdmin' => Auth::user()['role'] === 'admin',
+            'scripts' => ['/js/collection-search.js', '/js/forms.js'],
         ]));
     }
 
@@ -97,6 +98,7 @@ final readonly class RoomController
             'errors' => $errors,
             'old' => \HotelHub\Core\Input::safeValues($input),
             'isAdmin' => true,
+            'scripts' => ['/js/collection-search.js', '/js/forms.js'],
         ]), $status);
     }
 }

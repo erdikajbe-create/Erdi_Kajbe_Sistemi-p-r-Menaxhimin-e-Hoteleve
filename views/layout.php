@@ -11,18 +11,28 @@
     <title><?= e($title) ?> · HotelHub</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
-<body>
+<?php $pageKey = trim((string) (parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/'), '/') ?: 'home'; ?>
+<body class="page-<?= e(preg_replace('/[^a-z0-9-]/i', '-', $pageKey)) ?>">
     <header class="site-header">
-        <a class="brand" href="/">HotelHub</a>
+        <a class="brand" href="/" aria-label="HotelHub — faqja kryesore">
+            <span class="brand__mark" aria-hidden="true">H</span>
+            <span class="brand__copy"><strong>HOTELHUB</strong><small>HOSPITALITY MANAGEMENT</small></span>
+        </a>
         <nav class="site-nav" aria-label="Navigimi kryesor">
             <a href="/availability">Disponueshmëria</a>
             <?php $currentUser = \HotelHub\Core\Auth::user(); ?>
             <?php if ($currentUser !== null): ?>
                 <?php if (in_array($currentUser['role'], ['admin', 'receptionist'], true)): ?>
                     <a href="/rooms">Dhomat</a>
+                    <a href="/reservations">Rezervimet</a>
+                <?php endif; ?>
+                <?php if ($currentUser['role'] === 'guest'): ?>
+                    <a href="/reservations">Rezervimet e mia</a>
                 <?php endif; ?>
                 <?php if ($currentUser['role'] === 'admin'): ?>
+                    <a href="/dashboard">Dashboard</a>
                     <a href="/admin/room-types">Llojet e dhomave</a>
+                    <a href="/admin/services">Shërbimet</a>
                     <a href="/admin/staff">Stafi</a>
                 <?php endif; ?>
                 <span><?= e($currentUser['name']) ?></span>
@@ -36,7 +46,7 @@
             <?php endif; ?>
         </nav>
     </header>
-    <main class="container">
+    <main class="container" id="main-content">
         <?php foreach (\HotelHub\Core\Flash::consumeAll() as $flash): ?>
             <div class="flash flash--<?= e($flash['type']) ?>" role="status">
                 <?= e($flash['message']) ?>
@@ -47,5 +57,8 @@
     <footer class="site-footer">
         <p>HotelHub · Sistem për menaxhimin e hotelit</p>
     </footer>
+    <?php foreach (($scripts ?? []) as $script): ?>
+        <script src="<?= e($script) ?>" defer></script>
+    <?php endforeach; ?>
 </body>
 </html>

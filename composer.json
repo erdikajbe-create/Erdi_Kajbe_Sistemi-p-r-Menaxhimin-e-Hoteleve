@@ -14,6 +14,11 @@
             "HotelHub\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "HotelHub\\Tests\\": "tests/"
+        }
+    },
     "scripts": {
         "test": "phpunit"
     }

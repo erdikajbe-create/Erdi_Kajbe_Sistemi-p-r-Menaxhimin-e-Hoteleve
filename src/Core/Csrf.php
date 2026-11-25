@@ -28,6 +28,13 @@ final class Csrf
         }
     }
 
+    public static function verifyRequest(): void
+    {
+        $header = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? null;
+        $submitted = is_string($header) && $header !== '' ? $header : ($_POST['_csrf'] ?? null);
+        self::verify($submitted);
+    }
+
     private static function assertSessionStarted(): void
     {
         if (session_status() !== PHP_SESSION_ACTIVE) {
