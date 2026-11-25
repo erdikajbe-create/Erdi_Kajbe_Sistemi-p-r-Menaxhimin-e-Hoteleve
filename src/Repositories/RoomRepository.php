@@ -23,7 +23,7 @@ final readonly class RoomRepository
 
     public function find(int $id): ?array
     {
-        $statement = $this->pdo->prepare('SELECT id, room_type_id, number FROM rooms WHERE id = :id');
+        $statement = $this->pdo->prepare('SELECT id, room_type_id, number, status FROM rooms WHERE id = :id');
         $statement->execute(['id' => $id]);
         $room = $statement->fetch();
 
@@ -91,6 +91,55 @@ final readonly class RoomRepository
     public function hasReservations(int $id): bool
     {
         $statement = $this->pdo->prepare('SELECT EXISTS(SELECT 1 FROM reservations WHERE room_id = :id)');
+        $statement->execute(['id' => $id]);
+
+        return (bool) $statement->fetchColumn();
+    }
+
+    /**
+     * KF10 + RB01 + RB04: dhomat me kapacitet të mjaftueshëm, jo në mirëmbajtje,
+     * pa rezervim aktiv që mbivendoset. Përdor indeksin (room_id, check_in, check_out).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function available(string $checkIn, string $checkOut, int $guests): array
+    {
+        $statement = $this->pdo->prepare(
+            "SELECT r.id, r.number, r.floor, r.status, rt.id AS room_type_id, rt.name AS room_type_name, "
+            . "rt.description, rt.base_price, rt.capacity, "
+            . "(SELECT GROUP_CONCAT(a.name ORDER BY a.name SEPARATOR ', ') FROM amenity_room_type art "
+            . " JOIN amenities a ON a.id = art.amenity_id WHERE art.room_type_id = rt.id) AS amenities "
+            . "FROM rooms r JOIN room_types rt ON rt.id = r.room_type_id "
+            . "WHERE r.status <> 'maintenance' AND rt.capacity >= :guests "
+            . "AND NOT EXISTS (SELECT 1 FROM reservations x WHERE x.room_id = r.id "
+            . "  AND x.status <> 'cancelled' AND x.check_in < :check_out AND x.check_out > :check_in) "
+            . "ORDER BY rt.base_price, r.number",
+        );
+        $statement->execute(['guests' => $guests, 'check_in' => $checkIn, 'check_out' => $checkOut]);
+
+        return $statement->fetchAll();
+    }
+
+    /**
+     * Bllokon rreshtin e dhomës deri në fund të transaksionit (KJF08).
+     */
+    public function lockWithType(int $id): ?array
+    {
+        $statement = $this->pdo->prepare(
+            'SELECT r.id, r.number, r.status, rt.name AS room_type_name, rt.base_price, rt.capacity '
+            . 'FROM rooms r JOIN room_types rt ON rt.id = r.room_type_id WHERE r.id = :id FOR UPDATE',
+        );
+        $statement->execute(['id' => $id]);
+        $room = $statement->fetch();
+
+        return $room === false ? null : $room;
+    }
+
+    public function hasActiveStay(int $id): bool
+    {
+        $statement = $this->pdo->prepare(
+            "SELECT EXISTS(SELECT 1 FROM reservations WHERE room_id = :id AND status = 'checked_in')",
+        );
         $statement->execute(['id' => $id]);
 
         return (bool) $statement->fetchColumn();

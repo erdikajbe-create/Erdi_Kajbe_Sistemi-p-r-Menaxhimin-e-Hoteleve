@@ -27,7 +27,13 @@ final class ErrorHandler
         });
 
         set_exception_handler(static function (Throwable $exception) use ($debug): never {
-            error_log((string) $exception);
+            if (!$exception instanceof AppException || $exception->getStatusCode() >= 500) {
+                error_log((string) $exception);
+            }
+
+            if (Request::isApi()) {
+                self::renderJson($exception, $debug);
+            }
 
             $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
             if (str_starts_with($path, '/api/')) {
@@ -57,12 +63,14 @@ final class ErrorHandler
             }
 
             if ($exception instanceof AppException) {
+                $status = $exception->getStatusCode();
                 Response::html(
                     View::render('errors/error', [
-                        'title' => $exception->getMessage(),
+                        'title' => $status === 403 ? 'Qasje e ndaluar' : $exception->getMessage(),
                         'message' => $exception->getMessage(),
+                        'errors' => $exception instanceof ValidationException ? $exception->errors() : [],
                     ]),
-                    $exception->getStatusCode(),
+                    $status,
                 );
             }
 
@@ -79,5 +87,32 @@ final class ErrorHandler
                 500,
             );
         });
+    }
+
+    /**
+     * Një format i vetëm për të gjitha gabimet e /api (KJF11):
+     * {"success": false, "error": "CODE", "message": "...", "errors"?: {...}}
+     */
+    private static function renderJson(Throwable $exception, bool $debug): never
+    {
+        if ($exception instanceof AppException) {
+            $body = [
+                'success' => false,
+                'error' => $exception->getErrorCode(),
+                'message' => $exception->getMessage(),
+            ];
+            if ($exception instanceof ValidationException) {
+                $body['errors'] = $exception->errors();
+            }
+
+            Response::json($body, $exception->getStatusCode());
+        }
+
+        $body = ['success' => false, 'error' => 'SERVER_ERROR', 'message' => 'Ndodhi një gabim i brendshëm.'];
+        if ($debug) {
+            $body['debug'] = $exception->getMessage();
+        }
+
+        Response::json($body, 500);
     }
 }

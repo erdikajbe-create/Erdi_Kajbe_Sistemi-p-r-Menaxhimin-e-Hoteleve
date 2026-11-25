@@ -15,8 +15,12 @@ final class Auth
     public static function login(array $user): void
     {
         self::assertSessionStarted();
+        $intended = $_SESSION['_intended'] ?? null;
         session_regenerate_id(true);
-        $_SESSION['user'] = $user;
+        $_SESSION = ['user' => $user];
+        if ($intended !== null) {
+            $_SESSION['_intended'] = $intended;
+        }
     }
 
     public static function logout(): void
@@ -69,6 +73,41 @@ final class Auth
         }
 
         return $user;
+    }
+
+    /**
+     * Faqja ku duhet ridrejtuar pas hyrjes; vetëm shtigje lokale.
+     */
+    public static function pullIntended(): ?string
+    {
+        self::assertSessionStarted();
+        $intended = $_SESSION['_intended'] ?? null;
+        unset($_SESSION['_intended']);
+
+        return is_string($intended) && str_starts_with($intended, '/') && !str_starts_with($intended, '//')
+            ? $intended
+            : null;
+    }
+
+    public static function homeFor(string $role): string
+    {
+        return match ($role) {
+            'admin' => '/dashboard',
+            'receptionist' => '/reservations',
+            default => '/availability',
+        };
+    }
+
+    public static function id(): int
+    {
+        return (int) self::requireLogin()['id'];
+    }
+
+    public static function isStaff(): bool
+    {
+        $user = self::user();
+
+        return $user !== null && in_array($user['role'], ['admin', 'receptionist'], true);
     }
 
     public static function requireRole(string ...$roles): array

@@ -110,7 +110,7 @@ final readonly class AuthService
                 'email' => strtolower(trim($email)),
             ]);
 
-            throw new AppException('Email ose fjalëkalim i pasaktë.', 422);
+            throw new AppException('Email ose fjalëkalim i pasaktë.', 422, null, 'INVALID_CREDENTIALS');
         }
 
         $clear = $this->pdo->prepare('DELETE FROM login_attempts WHERE ip_address = :ip');

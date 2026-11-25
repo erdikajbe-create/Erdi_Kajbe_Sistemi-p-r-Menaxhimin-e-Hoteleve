@@ -99,4 +99,18 @@ nga migrimet e renditura në `database/migrations/` dhe të dhënat demo nga
 composer test
 ```
 
-Testet njësi të përfshira nuk kërkojnë lidhje databaze.
+Testet njësi (statuset, mbivendosja, afati i anulimit, paratë, router-i) nuk kërkojnë databazë.
+Testet e integrimit (`tests/Integration`) ekzekutojnë `ReservationService` kundër MySQL real dhe
+aktivizohen me një databazë testimi (fshihet dhe rikrijohet, prandaj emri duhet të mbarojë me `_test`):
+
+```powershell
+$env:TEST_DB_DATABASE="hotelhub_test"; $env:TEST_DB_USERNAME="root"; $env:TEST_DB_PASSWORD=""
+composer test
+```
+
+Demonstrim i rezervimeve paralele (KJF08), me aplikacionin të ndezur:
+
+```powershell
+php tests/manual/concurrent_booking.php http://localhost:8000 10
+# HTTP 201 × 1, HTTP 409 × 9
+```

@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace HotelHub\Core;
 
+use HotelHub\Controllers\Api\AuthApiController;
+use HotelHub\Controllers\Api\DashboardApiController;
+use HotelHub\Controllers\Api\ReservationApiController;
+use HotelHub\Controllers\Api\RoomApiController;
 use HotelHub\Controllers\AuthController;
 use HotelHub\Controllers\AvailabilityController;
 use HotelHub\Controllers\DashboardController;
@@ -20,8 +24,10 @@ use HotelHub\Repositories\ReservationRepository;
 use HotelHub\Repositories\ServiceRepository;
 use HotelHub\Repositories\AvailabilityRepository;
 use HotelHub\Repositories\GuestRepository;
+use HotelHub\Repositories\ReservationRepository;
 use HotelHub\Repositories\RoomRepository;
 use HotelHub\Repositories\RoomTypeRepository;
+use HotelHub\Repositories\ServiceRepository;
 use HotelHub\Repositories\UserRepository;
 use HotelHub\Services\AuthService;
 use HotelHub\Services\AvailabilityService;
@@ -31,6 +37,10 @@ use HotelHub\Services\InvoiceService;
 use HotelHub\Services\ServiceCatalogService;
 use PDO;
 
+/**
+ * Lidh rrugët me controller-ët dhe ndërton objektet (një container i vogël manual).
+ * Objektet krijohen vetëm kur nevojiten, që faqet pa databazë të mos hapin lidhje.
+ */
 final class Application
 {
     private ?PDO $pdo = null;
@@ -54,9 +64,13 @@ final class Application
     {
         $router = new Router();
         $router->get('/', static function (): void {
+            $config = require dirname(__DIR__, 2) . '/config/config.php';
+            $pdo = Database::connect($config['database']);
             Response::html(View::render('home', [
                 'title' => 'HotelHub',
                 'user' => Auth::user(),
+                'roomTypes' => (new RoomTypeRepository($pdo))->all(),
+                'services' => (new ServiceRepository($pdo))->all(true),
             ]));
         });
         $router->get('/availability', function (): void {
@@ -88,65 +102,89 @@ final class Application
         $router->get('/api/reservations/{id}/invoice', function (string $id): void { $this->reservationApiController()->invoice($id); });
         $router->get('/api/dashboard/stats', function (): void { $this->dashboardApiController()->stats(); });
 
-        $router->get('/register', function (): void {
-            $this->authController()->registerForm();
-        });
-        $router->post('/register', function (): void {
-            $this->authController()->register();
-        });
-        $router->get('/login', function (): void {
-            $this->authController()->loginForm();
-        });
-        $router->post('/login', function (): void {
-            $this->authController()->login();
-        });
-        $router->post('/logout', function (): void {
-            $this->authController()->logout();
-        });
-        $router->get('/admin/staff', function (): void {
-            $this->authController()->staffIndex();
-        });
-        $router->post('/admin/staff', function (): void {
-            $this->authController()->createStaff();
-        });
+        // ---------------------------------------------------------------- faqet HTML
+        $this->routes($router, AuthController::class, [
+            ['GET', '/register', 'registerForm'],
+            ['POST', '/register', 'register'],
+            ['GET', '/login', 'loginForm'],
+            ['POST', '/login', 'login'],
+            ['POST', '/logout', 'logout'],
+            ['GET', '/admin/staff', 'staffIndex'],
+            ['POST', '/admin/staff', 'createStaff'],
+        ]);
+        $this->routes($router, RoomTypeController::class, [
+            ['GET', '/admin/room-types', 'index'],
+            ['POST', '/admin/room-types', 'create'],
+            ['POST', '/admin/room-types/{id}', 'update'],
+            ['POST', '/admin/room-types/{id}/delete', 'delete'],
+            ['POST', '/admin/amenities', 'createAmenity'],
+            ['POST', '/admin/amenities/{id}', 'updateAmenity'],
+            ['POST', '/admin/amenities/{id}/delete', 'deleteAmenity'],
+        ]);
+        $this->routes($router, RoomController::class, [
+            ['GET', '/rooms', 'index'],
+            ['POST', '/rooms', 'create'],
+            ['POST', '/rooms/{id}', 'update'],
+            ['POST', '/rooms/{id}/status', 'updateStatus'],
+            ['POST', '/rooms/{id}/delete', 'delete'],
+        ]);
+        $this->routes($router, AvailabilityController::class, [
+            ['GET', '/availability', 'index'],
+        ]);
+        $this->routes($router, ReservationController::class, [
+            ['GET', '/reservations', 'index'],
+            ['GET', '/reservations/create', 'create'],
+            ['POST', '/reservations', 'store'],
+            ['GET', '/reservations/{id}', 'show'],
+            ['POST', '/reservations/{id}/confirm', 'confirm'],
+            ['POST', '/reservations/{id}/cancel', 'cancel'],
+            ['POST', '/reservations/{id}/check-in', 'checkIn'],
+            ['POST', '/reservations/{id}/check-out', 'checkOut'],
+            ['POST', '/reservations/{id}/services', 'addService'],
+            ['POST', '/reservations/{id}/payments', 'addPayment'],
+        ]);
+        $this->routes($router, ServiceController::class, [
+            ['GET', '/admin/services', 'index'],
+            ['POST', '/admin/services', 'create'],
+            ['POST', '/admin/services/{id}', 'update'],
+        ]);
+        $this->routes($router, DashboardController::class, [
+            ['GET', '/dashboard', 'index'],
+        ]);
 
-        $router->get('/admin/room-types', function (): void {
-            $this->roomTypeController()->index();
-        });
-        $router->post('/admin/room-types', function (): void {
-            $this->roomTypeController()->create();
-        });
-        $router->post('/admin/room-types/{id}', function (string $id): void {
-            $this->roomTypeController()->update($id);
-        });
-        $router->post('/admin/room-types/{id}/delete', function (string $id): void {
-            $this->roomTypeController()->delete($id);
-        });
-        $router->post('/admin/amenities', function (): void {
-            $this->roomTypeController()->createAmenity();
-        });
-        $router->post('/admin/amenities/{id}', function (string $id): void {
-            $this->roomTypeController()->updateAmenity($id);
-        });
-        $router->post('/admin/amenities/{id}/delete', function (string $id): void {
-            $this->roomTypeController()->deleteAmenity($id);
-        });
-
-        $router->get('/rooms', function (): void {
-            $this->roomController()->index();
-        });
-        $router->post('/rooms', function (): void {
-            $this->roomController()->create();
-        });
-        $router->post('/rooms/{id}', function (string $id): void {
-            $this->roomController()->update($id);
-        });
-        $router->post('/rooms/{id}/status', function (string $id): void {
-            $this->roomController()->updateStatus($id);
-        });
-        $router->post('/rooms/{id}/delete', function (string $id): void {
-            $this->roomController()->delete($id);
-        });
+        // ---------------------------------------------------------------- JSON /api
+        $this->routes($router, AuthApiController::class, [
+            ['GET', '/api/auth/csrf', 'csrf'],
+            ['POST', '/api/auth/register', 'register'],
+            ['POST', '/api/auth/login', 'login'],
+            ['POST', '/api/auth/logout', 'logout'],
+            ['GET', '/api/auth/me', 'me'],
+        ]);
+        $this->routes($router, RoomApiController::class, [
+            ['GET', '/api/availability', 'availability'],
+            ['GET', '/api/room-types', 'types'],
+            ['POST', '/api/room-types', 'createType'],
+            ['PATCH', '/api/room-types/{id}', 'updateType'],
+            ['DELETE', '/api/room-types/{id}', 'deleteType'],
+            ['GET', '/api/rooms', 'rooms'],
+            ['POST', '/api/rooms', 'createRoom'],
+            ['PATCH', '/api/rooms/{id}/status', 'updateStatus'],
+        ]);
+        $this->routes($router, ReservationApiController::class, [
+            ['GET', '/api/reservations', 'index'],
+            ['POST', '/api/reservations', 'store'],
+            ['GET', '/api/reservations/{id}', 'show'],
+            ['POST', '/api/reservations/{id}/confirm', 'confirm'],
+            ['POST', '/api/reservations/{id}/cancel', 'cancel'],
+            ['POST', '/api/reservations/{id}/check-in', 'checkIn'],
+            ['POST', '/api/reservations/{id}/check-out', 'checkOut'],
+            ['POST', '/api/reservations/{id}/services', 'addService'],
+            ['POST', '/api/reservations/{id}/payments', 'addPayment'],
+            ['GET', '/api/reservations/{id}/invoice', 'invoice'],
+        ]);
+        $this->routes($router, DashboardApiController::class, [
+            ['GET', '/api/dashboard/stats', 'stats'],
+        ]);
 
         $router->get('/reservations', function (): void { $this->reservationController()->index(); });
         $router->get('/reservations/create', function (): void { $this->reservationController()->create(); });
@@ -167,9 +205,24 @@ final class Application
         return $router;
     }
 
-    private function authController(): AuthController
+    /**
+     * @param class-string $controller
+     * @param list<array{0: string, 1: string, 2: string}> $routes
+     */
+    private function routes(Router $router, string $controller, array $routes): void
     {
-        return new AuthController($this->authService(), $this->userRepository());
+        foreach ($routes as [$method, $path, $action]) {
+            $handler = function (string ...$parameters) use ($controller, $action): void {
+                $this->controller($controller)->{$action}(...$parameters);
+            };
+
+            match ($method) {
+                'GET' => $router->get($path, $handler),
+                'POST' => $router->post($path, $handler),
+                'PATCH' => $router->patch($path, $handler),
+                'DELETE' => $router->delete($path, $handler),
+            };
+        }
     }
 
     private function availabilityController(): AvailabilityController
@@ -179,12 +232,42 @@ final class Application
 
     private function roomController(): RoomController
     {
-        return new RoomController($this->roomManagementService(), $this->roomRepository());
-    }
-
-    private function roomTypeController(): RoomTypeController
-    {
-        return new RoomTypeController($this->roomManagementService(), $this->roomTypeRepository());
+        return match ($class) {
+            AuthController::class => new AuthController($this->authService(), $this->get(UserRepository::class)),
+            RoomController::class => new RoomController(
+                $this->roomManagementService(),
+                $this->get(RoomRepository::class),
+            ),
+            RoomTypeController::class => new RoomTypeController(
+                $this->roomManagementService(),
+                $this->get(RoomTypeRepository::class),
+            ),
+            AvailabilityController::class => new AvailabilityController($this->availabilityService()),
+            ReservationController::class => new ReservationController(
+                $this->reservationService(),
+                $this->invoiceService(),
+                $this->get(RoomRepository::class),
+                $this->get(GuestRepository::class),
+                $this->get(ServiceRepository::class),
+            ),
+            ServiceController::class => new ServiceController(
+                new ServiceCatalogService($this->get(ServiceRepository::class)),
+                $this->get(ServiceRepository::class),
+            ),
+            DashboardController::class => new DashboardController($this->get(DashboardRepository::class)),
+            AuthApiController::class => new AuthApiController($this->authService()),
+            RoomApiController::class => new RoomApiController(
+                $this->availabilityService(),
+                $this->roomManagementService(),
+                $this->get(RoomRepository::class),
+                $this->get(RoomTypeRepository::class),
+            ),
+            ReservationApiController::class => new ReservationApiController(
+                $this->reservationService(),
+                $this->invoiceService(),
+            ),
+            DashboardApiController::class => new DashboardApiController($this->get(DashboardRepository::class)),
+        };
     }
 
     private function reservationController(): ReservationController
@@ -255,7 +338,11 @@ final class Application
 
     private function authService(): AuthService
     {
-        return $this->auth ??= new AuthService($this->pdo(), $this->userRepository(), $this->guestRepository());
+        return $this->instances[AuthService::class] ??= new AuthService(
+            $this->pdo(),
+            $this->get(UserRepository::class),
+            $this->get(GuestRepository::class),
+        );
     }
 
     private function availabilityService(): AvailabilityService
@@ -265,21 +352,27 @@ final class Application
 
     private function roomManagementService(): RoomManagementService
     {
-        return $this->roomManagement ??= new RoomManagementService(
+        return $this->instances[RoomManagementService::class] ??= new RoomManagementService(
             $this->pdo(),
-            $this->roomRepository(),
-            $this->roomTypeRepository(),
+            $this->get(RoomRepository::class),
+            $this->get(RoomTypeRepository::class),
         );
     }
 
-    private function userRepository(): UserRepository
+    private function availabilityService(): AvailabilityService
     {
-        return $this->users ??= new UserRepository($this->pdo());
+        return $this->instances[AvailabilityService::class] ??= new AvailabilityService($this->get(RoomRepository::class));
     }
 
-    private function guestRepository(): GuestRepository
+    private function reservationService(): ReservationService
     {
-        return $this->guests ??= new GuestRepository($this->pdo());
+        return $this->instances[ReservationService::class] ??= new ReservationService(
+            $this->pdo(),
+            $this->get(ReservationRepository::class),
+            $this->get(RoomRepository::class),
+            $this->get(GuestRepository::class),
+            $this->get(ServiceRepository::class),
+        );
     }
 
     private function availabilityRepository(): AvailabilityRepository
@@ -289,12 +382,19 @@ final class Application
 
     private function roomRepository(): RoomRepository
     {
-        return $this->rooms ??= new RoomRepository($this->pdo());
+        return $this->instances[InvoiceService::class] ??= new InvoiceService($this->get(ReservationRepository::class));
     }
 
-    private function roomTypeRepository(): RoomTypeRepository
+    /**
+     * Repository-t kanë vetëm PDO si varësi.
+     *
+     * @template T of object
+     * @param class-string<T> $repository
+     * @return T
+     */
+    private function get(string $repository): object
     {
-        return $this->roomTypes ??= new RoomTypeRepository($this->pdo());
+        return $this->instances[$repository] ??= new $repository($this->pdo());
     }
 
     private function pdo(): PDO

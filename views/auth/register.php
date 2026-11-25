@@ -30,3 +30,4 @@
     </form>
     <p>Ke llogari? <a href="/login">Hyr këtu</a>.</p>
 </section>
+</div>

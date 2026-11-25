@@ -21,3 +21,4 @@
     </form>
     <p>Nuk ke llogari? <a href="/register">Regjistrohu</a>.</p>
 </section>
+</div>

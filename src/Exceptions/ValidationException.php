@@ -13,7 +13,7 @@ final class ValidationException extends AppException
         private readonly array $errors,
         string $message = 'Kontrolloni fushat e shënuara.',
     ) {
-        parent::__construct($message, 422);
+        parent::__construct($message, 422, null, 'VALIDATION_ERROR');
     }
 
     /**
